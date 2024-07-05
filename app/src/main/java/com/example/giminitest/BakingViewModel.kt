@@ -1,6 +1,9 @@
 package com.example.giminitest
 
 import android.graphics.Bitmap
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.GenerativeModel
@@ -17,10 +20,16 @@ class BakingViewModel : ViewModel() {
     val uiState: StateFlow<UiState> =
         _uiState.asStateFlow()
 
-    private val generativeModel = GenerativeModel(
-        modelName = "gemini-pro-vision",
-        apiKey = BuildConfig.apiKey
-    )
+    var currModel by mutableStateOf(Model.GEMINI_1_5_FLASH)
+
+//    val generativeModel = GenerativeModel(
+//        modelName = Model.GEMINI_1_5_FLASH.str,
+////        modelName = "gemini-1.5-pro",
+////        modelName = "gemini-pro-vision",
+//        apiKey = BuildConfig.apiKey
+//    )
+
+    val generativeModel get() = currModel.model
 
     fun sendPrompt(
         bitmap: Bitmap,

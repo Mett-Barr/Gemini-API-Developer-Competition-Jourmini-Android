@@ -21,11 +21,6 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-
-//        val properties = Properties()
-//        properties.load(project.rootProject.file("local.properties").inputStream())
-//        val apiKey = properties.getProperty("API_KEY")
-//        buildConfigField("String", "API_KEY", "\"$apiKey\"")
     }
 
     buildTypes {
@@ -70,6 +65,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.generativeai)
+    implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -83,7 +79,7 @@ dependencies {
 secrets {
     // Optionally specify a different file name containing your secrets.
     // The plugin defaults to "local.properties"
-    propertiesFileName = "secrets.properties"
+//    propertiesFileName = "secrets.properties"
 //    defaultPropertiesFileName = "secrets.defaults.properties"
 
     // Add keys that the plugin should ignore from the properties file
