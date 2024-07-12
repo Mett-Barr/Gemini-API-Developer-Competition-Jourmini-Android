@@ -1,6 +1,7 @@
 package com.example.giminitest
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,7 +38,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -45,7 +45,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.ai.client.generativeai.type.Candidate
+import com.google.ai.client.generativeai.type.Content
 import com.google.ai.client.generativeai.type.ImagePart
 import com.google.ai.client.generativeai.type.TextPart
 import com.google.ai.client.generativeai.type.content
@@ -61,7 +61,7 @@ fun Test(modifier: Modifier = Modifier, bakingViewModel: BakingViewModel = viewM
     val focusManager = LocalFocusManager.current
 
     val model = bakingViewModel.generativeModel
-    val list = remember { mutableStateListOf<List<Candidate>>() }
+    val list = remember { mutableStateListOf<Content>() }
     var curr by remember { mutableStateOf(TextFieldValue()) }
     val images = remember { mutableStateListOf<Bitmap>() }
 
@@ -87,52 +87,63 @@ fun Test(modifier: Modifier = Modifier, bakingViewModel: BakingViewModel = viewM
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         LazyColumn(
-            Modifier.weight(1f),
+            Modifier
+                .fillMaxWidth()
+                .weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(vertical = 8.dp),
         ) {
-            itemsIndexed(list, key = { index, _ -> index }) { _, candidates ->
+            itemsIndexed(list, key = { index, _ -> index }) { _, content ->
                 Column(Modifier.fillMaxWidth()) {
+                    val isUser = content.role == "user"
                     Card(
                         Modifier
-                            .align(Alignment.Start)
-                            .wrapContentHeight()
+                            .align(if (isUser) Alignment.End else Alignment.Start)
+                            .wrapContentHeight(),
+                        shape = RoundedCornerShape(
+                            topStart = 16.dp,
+                            topEnd = 16.dp,
+                            bottomEnd = if (isUser) 4.dp else 16.dp,
+                            bottomStart = if (isUser) 16.dp else 4.dp
+                        )
                     ) {
                         Column(
-                            Modifier
-                                .padding(8.dp)
-                                .align(if (candidates.first().content.role == "user") Alignment.End else Alignment.Start)
-                        ) {
-                            candidates.forEach { candidate ->
-                                candidate.content.parts.let { parts ->
-                                    parts.filterIsInstance<TextPart>().forEach {
-                                        Text(text = it.text.dropLast(1))
-                                    }
+                            Modifier.padding(8.dp),
+                        ) Content@{
+                            val textIterable = content.parts.filterIsInstance<TextPart>()
+                            if (textIterable.isNotEmpty()) {
+                                content.parts.filterIsInstance<TextPart>().forEach {
+                                    val text =
+                                        if (it.text.last() == '\n') it.text.dropLast(1) else it.text
+                                    Text(text = text)
+                                }
+                            }
 
-                                    if (parts.filterIsInstance<ImagePart>().isEmpty()) return@forEach
-                                    LazyRow(
-                                        Modifier
-                                            .weight(1f)
-                                            .height(150.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        contentPadding = PaddingValues(8.dp)
-                                    ) {
-                                        items(images) {
-                                            Image(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .clip(RoundedCornerShape(8.dp)),
-                                                bitmap = it.asImageBitmap(),
-                                                contentDescription = null,
-                                                contentScale = ContentScale.FillHeight
-                                            )
-                                        }
-                                    }
+                            val imageIterable = content.parts.filterIsInstance<ImagePart>()
+                            Log.d("!!!", "imageIterable: size = ${imageIterable.size}")
+                            if (imageIterable.isEmpty()) return@Content
+                            Log.d("!!!", "image LazyRow")
+                            LazyRow(
+                                Modifier
+//                                    .fillMaxWidth()
+                                    .height(150.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                contentPadding = PaddingValues(8.dp)
+                            ) {
+                                items(imageIterable) {
+                                    Image(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        bitmap = it.image.asImageBitmap(),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.FillHeight
+                                    )
+                                }
+                            }
 //                                    parts.filterIsInstance<ImagePart>().forEach {
 //                                        Image(it.image.asImageBitmap(), null)
 //                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -202,16 +213,24 @@ fun Test(modifier: Modifier = Modifier, bakingViewModel: BakingViewModel = viewM
             TextField(value = curr, onValueChange = { curr = it }, Modifier.weight(1f))
             Button(onClick = {
                 scope.launch {
-                    val r = model.generateContent(content {
-                        text(curr.text)
-                        curr = emptyString
+                    val content = content {
+                        if (curr.text.isNotBlank()) {
+                            text(curr.text)
+                            curr = emptyString
+                        }
 
                         images.forEach {
                             image(it)
                         }
                         images.clear()
-                    })
-                    list.add(r.candidates)
+                    }
+                    list.add(content)
+                    Log.d("!!!", "image size ${content.parts.filterIsInstance<ImagePart>().size}")
+
+                    val r = model.generateContent(content)
+                    r.candidates.forEach {
+                        list.add(it.content)
+                    }
                 }
 
                 focusManager.clearFocus()
