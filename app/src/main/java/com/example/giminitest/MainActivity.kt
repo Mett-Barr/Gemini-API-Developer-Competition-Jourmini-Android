@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.giminitest.ui.page.map.MapTest
 import com.example.giminitest.ui.theme.GiminiTestTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -56,6 +57,9 @@ class MainActivity : ComponentActivity() {
 //                    BakingScreen()
                     Scaffold {
                         Test(Modifier.padding(it))
+
+
+//                        MapTest()
                     }
                 }
             }
