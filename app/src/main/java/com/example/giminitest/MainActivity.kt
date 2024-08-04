@@ -1,51 +1,58 @@
 package com.example.giminitest
 
-import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import com.example.giminitest.ui.page.map.MapTest
+import com.example.giminitest.BuildConfig.MAPS_API_KEY
+import com.example.giminitest.ui.page.GeminiTestPage
 import com.example.giminitest.ui.theme.GiminiTestTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPhotoRequest
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
+
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
+
+
+        Places.initializeWithNewPlacesApiEnabled(this, MAPS_API_KEY)
+        val placesClient = Places.createClient(this)
+//        val center = LatLng(37.7749, -122.4194)
+//        val circle = CircularBounds.newInstance(center,  /* radius = */50000.0)
+//        val autocompletePlacesRequest =
+//            FindAutocompletePredictionsRequest.builder()
+//                .setQuery("park")
+//                .setRegionCode("ES")
+////                .setLocationRestriction(circle)
+//                .build()
+//        placesClient.findAutocompletePredictions(autocompletePlacesRequest)
+//            .addOnSuccessListener { response ->
+//                Log.d("!!!", "addOnSuccessListener")
+//                val predictions: List<AutocompletePrediction> =
+//                    response.autocompletePredictions
+//                Log.d("!!!", "addOnSuccessListener predictions size = ${predictions.size}")
+//                predictions.forEach {
+//                    Log.d("!!!", "addOnSuccessListener: $it")
+//                }
+//            }
+//            .addOnFailureListener {
+//                Log.d("!!!", "addOnFailureListener: $it")
+//            }
+
 
         setContent {
             GiminiTestTheme {
@@ -56,10 +63,33 @@ class MainActivity : ComponentActivity() {
                 ) {
 //                    BakingScreen()
                     Scaffold {
-                        Test(Modifier.padding(it))
+                        it
+                        GeminiTestPage(Modifier.padding(it))
 
 
 //                        MapTest()
+//                        Search()
+//
+//                        val sheetState = rememberModalBottomSheetState()
+//                        var boo by remember { mutableStateOf(true) }
+//                        val scope = rememberCoroutineScope()
+//                        val b = {
+//                            scope.launch {
+//                                delay(3.seconds)
+//                                boo = true
+//                            }
+//                        }
+//                        AnimatedVisibility(
+//                            visible = boo,
+//                            enter = fadeIn(),
+//                            exit = fadeOut(),
+//                        ) {
+//                            DialogMap {
+//                                boo = false
+//                                b()
+//                            }
+//                        }
+
                     }
                 }
             }

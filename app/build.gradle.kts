@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
+
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 android {
@@ -76,6 +78,23 @@ dependencies {
     // Maps SDK for Android
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.maps.android:maps-compose:6.1.0")
+    implementation(libs.places)
+
+    // Ktor
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.serialization)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.kotlinx.serialization.json)
+
+
+    // Icon
+    implementation("androidx.compose.material:material-icons-extended:1.6.8")
+
+
+    // Coil
+//    implementation(libs.coil.compose)
 }
 
 

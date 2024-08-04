@@ -1,4 +1,4 @@
-package com.example.giminitest
+package com.example.giminitest.ui.page
 
 import android.graphics.Bitmap
 import android.util.Log
@@ -29,6 +29,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,17 +46,27 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.giminitest.BakingViewModel
+import com.example.giminitest.BuildConfig
+import com.example.giminitest.MainActivity
+import com.example.giminitest.Model
+import com.example.giminitest.data.TravelPlan
+import com.example.giminitest.data.getPlaceDetails
+import com.example.giminitest.data.travelPlanString
+import com.example.giminitest.uriToBitmap
 import com.google.ai.client.generativeai.type.Content
 import com.google.ai.client.generativeai.type.ImagePart
 import com.google.ai.client.generativeai.type.TextPart
 import com.google.ai.client.generativeai.type.content
+import com.google.android.libraries.places.api.Places
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 val emptyString = TextFieldValue()
 
 @Composable
-fun Test(modifier: Modifier = Modifier, bakingViewModel: BakingViewModel = viewModel()) {
+fun GeminiTestPage(modifier: Modifier = Modifier, bakingViewModel: BakingViewModel = viewModel()) {
     val context = LocalContext.current as MainActivity
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
@@ -120,9 +131,7 @@ fun Test(modifier: Modifier = Modifier, bakingViewModel: BakingViewModel = viewM
                             }
 
                             val imageIterable = content.parts.filterIsInstance<ImagePart>()
-                            Log.d("!!!", "imageIterable: size = ${imageIterable.size}")
                             if (imageIterable.isEmpty()) return@Content
-                            Log.d("!!!", "image LazyRow")
                             LazyRow(
                                 Modifier
 //                                    .fillMaxWidth()
@@ -225,7 +234,6 @@ fun Test(modifier: Modifier = Modifier, bakingViewModel: BakingViewModel = viewM
                         images.clear()
                     }
                     list.add(content)
-                    Log.d("!!!", "image size ${content.parts.filterIsInstance<ImagePart>().size}")
 
                     val r = model.generateContent(content)
                     r.candidates.forEach {
@@ -239,4 +247,56 @@ fun Test(modifier: Modifier = Modifier, bakingViewModel: BakingViewModel = viewM
             }
         }
     }
+
+
+    LaunchedEffect(Unit) {
+        Places.initializeWithNewPlacesApiEnabled(context, BuildConfig.MAPS_API_KEY)
+
+        scope.launch {
+            val content = content {
+                text(prompt)
+                curr = emptyString
+            }
+            list.add(content)
+
+            val r = model.generateContent(content)
+            r.candidates.forEach { candidate ->
+                list.add(candidate.content)
+
+                candidate.content.parts.filterIsInstance<TextPart>().forEach {
+                    val text = if (it.text.last() == '\n') it.text.dropLast(1) else it.text
+                    Log.d("!!!", text)
+
+                    // 解析 JSON 字串
+                    val plans = parseJson(text)
+                    plans?.forEach { plan ->
+                        val place = getPlaceDetails(plan.place, BuildConfig.MAPS_API_KEY)
+                        Log.d("!!!", place.toString())
+                    }
+                }
+            }
+        }
+    }
 }
+
+
+private val json = Json { ignoreUnknownKeys = true }
+fun parseJson(text: String): List<TravelPlan>? {
+    // 移除多餘的字符
+    val cleanedText = text.replace("```json", "").replace("```", "").trim()
+    return try {
+        json.decodeFromString<List<TravelPlan>>(cleanedText)
+    } catch (e: Exception) {
+        Log.d("!!!", "Json.decodeFromString: $e")
+        null
+    }
+}
+
+
+val prompt = """
+            請給我一份台北兩天一夜的旅遊行程
+            請根據上面的描述，期望格式的輸出
+  Using this JSON schema:
+    ${travelPlanString()}
+  Return a `List<TravelPlan>`
+  """
