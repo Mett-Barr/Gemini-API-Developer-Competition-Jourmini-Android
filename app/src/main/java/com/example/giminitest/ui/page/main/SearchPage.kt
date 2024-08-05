@@ -1,12 +1,13 @@
 package com.example.giminitest.ui.page.main
 
-import android.app.Activity
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,9 +16,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AttachFile
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -35,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.giminitest.uriToBitmap
@@ -48,12 +53,15 @@ import kotlinx.coroutines.launch
 )
 @Composable
 fun Preview(modifier: Modifier = Modifier) {
-    Search()
+    SearchPage()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Search(modifier: Modifier = Modifier) {
+fun SearchPage(
+    navigate: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val images = remember { mutableStateListOf<Bitmap>() }
@@ -98,24 +106,43 @@ fun Search(modifier: Modifier = Modifier) {
             fillMaxWidth,
             style = MaterialTheme.typography.headlineSmall
         )
-        SearchBar(
-            modifier = fillMaxWidth,
-            query = text,
-            onQueryChange = { text = it },
-            onSearch = {},
-            active = false,
-            onActiveChange = {},
-            shape = RoundedCornerShape(8.dp),
-            leadingIcon = {
+        Card(shape = RoundedCornerShape(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(8.dp)) {
                 Icon(
                     imageVector = Icons.Rounded.Search,
                     contentDescription = "Search"
                 )
-            },
-            windowInsets = WindowInsets(0.dp)
-        ) {
-            TextField(value = text, onValueChange = { text = it })
+                TextField(
+                    value = text, onValueChange = { text = it }, Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Search
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            navigate()
+                        }
+                    ),
+                )
+            }
         }
+//        SearchBar(
+//            modifier = fillMaxWidth,
+//            query = text,
+//            onQueryChange = { text = it },
+//            onSearch = { navigate() },
+//            active = false,
+//            onActiveChange = {},
+//            shape = RoundedCornerShape(8.dp),
+//            leadingIcon = {
+//                Icon(
+//                    imageVector = Icons.Rounded.Search,
+//                    contentDescription = "Search"
+//                )
+//            },
+//            windowInsets = WindowInsets(0.dp)
+//        ) {
+//            TextField(value = text, onValueChange = { text = it }, Modifier.fillMaxWidth())
+//        }
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = fillMaxWidth

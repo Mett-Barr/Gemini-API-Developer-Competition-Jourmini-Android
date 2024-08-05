@@ -13,7 +13,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.giminitest.BuildConfig.MAPS_API_KEY
+import com.example.giminitest.data.json.ApiJson.Companion.fakeJsonObject
+import com.example.giminitest.map.openGoogleMapsRoute
 import com.example.giminitest.ui.page.GeminiTestPage
+import com.example.giminitest.ui.page.main.PlanPage
 import com.example.giminitest.ui.theme.GiminiTestTheme
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
@@ -28,7 +31,21 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
+        setContent {
+            GiminiTestTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
+                    Scaffold {
+                        Navigation(Modifier.padding(it))
+                    }
+                }
+            }
+        }
+    }
 
+    fun placeApiTest() {
         Places.initializeWithNewPlacesApiEnabled(this, MAPS_API_KEY)
         val placesClient = Places.createClient(this)
 //        val center = LatLng(37.7749, -122.4194)
@@ -52,47 +69,5 @@ class MainActivity : ComponentActivity() {
 //            .addOnFailureListener {
 //                Log.d("!!!", "addOnFailureListener: $it")
 //            }
-
-
-        setContent {
-            GiminiTestTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
-                ) {
-//                    BakingScreen()
-                    Scaffold {
-                        it
-                        GeminiTestPage(Modifier.padding(it))
-
-
-//                        MapTest()
-//                        Search()
-//
-//                        val sheetState = rememberModalBottomSheetState()
-//                        var boo by remember { mutableStateOf(true) }
-//                        val scope = rememberCoroutineScope()
-//                        val b = {
-//                            scope.launch {
-//                                delay(3.seconds)
-//                                boo = true
-//                            }
-//                        }
-//                        AnimatedVisibility(
-//                            visible = boo,
-//                            enter = fadeIn(),
-//                            exit = fadeOut(),
-//                        ) {
-//                            DialogMap {
-//                                boo = false
-//                                b()
-//                            }
-//                        }
-
-                    }
-                }
-            }
-        }
     }
 }
