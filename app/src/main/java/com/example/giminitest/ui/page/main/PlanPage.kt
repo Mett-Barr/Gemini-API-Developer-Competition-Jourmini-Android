@@ -24,7 +24,6 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -35,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import com.example.giminitest.data.json.ApiJson
 import com.example.giminitest.ui.component.DialogMap
 import com.example.giminitest.ui.component.YoutubeThumb
-import com.example.giminitest.ui.theme.GiminiTestTheme
 
 @Preview(
     widthDp = 730,
@@ -55,89 +53,88 @@ fun PlanPage(
     modifier: Modifier = Modifier,
     apiJson: ApiJson = ApiJson.fakeJsonObject
 ) {
-    GiminiTestTheme {
-        Surface {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = modifier.padding(8.dp)
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier.padding(8.dp)
+    ) {
+        Row(Modifier.clip(RoundedCornerShape(16.dp)).clickable { navigate() }.padding(4.dp)) {
+            Icon(
+                Icons.Rounded.ArrowBackIosNew,
+                contentDescription = null,
+                modifier = Modifier)
+            Text("Demo")
+        }
+        Text("User prompt is here", style = MaterialTheme.typography.headlineLarge)
+        Row {
+            Icon(Icons.Rounded.Search, contentDescription = null)
+            Text("Pro Search")
+        }
+        Row {
+            LazyColumn(
+                Modifier.weight(4f),
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Row {
-                    Icon(Icons.Rounded.ArrowBackIosNew, contentDescription = null, modifier = Modifier.clickable { navigate() })
-                    Text("Demo")
-                }
-                Text("User prompt is here", style = MaterialTheme.typography.headlineLarge)
-                Row {
-                    Icon(Icons.Rounded.Search, contentDescription = null)
-                    Text("Pro Search")
-                }
-                Row {
-                    LazyColumn(
-                        Modifier.weight(4f),
-                        contentPadding = PaddingValues(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(3) {
-                            Card(Modifier.fillMaxWidth()) {
-                                Row(Modifier.padding(8.dp)) {
-                                    Text("·Search for information...")
-                                }
-                            }
+                items(3) {
+                    Card(Modifier.fillMaxWidth()) {
+                        Row(Modifier.padding(8.dp)) {
+                            Text("·Search for information...")
                         }
-                        item {
-                            Text(text = "Sources")
-                            Spacer(modifier = Modifier.height(8.dp))
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                items(5) {
-                                    Card {
-                                        Column(Modifier.padding(8.dp)) {
-                                            Text("Best\nNightMarket")
-                                            Row {
-                                                Spacer(
-                                                    modifier = Modifier
-                                                        .size(24.dp)
-                                                        .clip(CircleShape)
-                                                        .background(Color(0xffb471bc))
-                                                )
-                                                Text(text = "Taiwannobsessed · 1")
-                                            }
-                                        }
+                    }
+                }
+                item {
+                    Text(text = "Sources")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(5) {
+                            Card {
+                                Column(Modifier.padding(8.dp)) {
+                                    Text("Best\nNightMarket")
+                                    Row {
+                                        Spacer(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xffb471bc))
+                                        )
+                                        Text(text = "Taiwannobsessed · 1")
                                     }
                                 }
                             }
                         }
-                        item {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                items(5) {
-                                    Column(Modifier.clip(RoundedCornerShape(16.dp))) {
-                                        YoutubeThumb(
-                                            videoId = "f4cKo1jFZG0",
-                                            Modifier
-                                                .width(200.dp)
-                                                .aspectRatio(128f / 72f)
-                                        )
-                                        Text(
-                                            text = "Best Night Market", Modifier
-                                                .background(Color(0xff007aff))
-                                                .width(200.dp)
-                                                .padding(8.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        item {
-                            Text(sampleText)
-                        }
-                    }
-                    Column(Modifier.weight(3f)) {
-                        DialogMap(
-                            Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1f)
-                                .padding(16.dp)
-                        )
                     }
                 }
+                item {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(5) {
+                            Column(Modifier.clip(RoundedCornerShape(16.dp))) {
+                                YoutubeThumb(
+                                    videoId = "f4cKo1jFZG0",
+                                    Modifier
+                                        .width(200.dp)
+                                        .aspectRatio(128f / 72f)
+                                )
+                                Text(
+                                    text = "Best Night Market", Modifier
+                                        .background(Color(0xff007aff))
+                                        .width(200.dp)
+                                        .padding(8.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+                item {
+                    Text(sampleText)
+                }
+            }
+            Column(Modifier.weight(3f)) {
+                DialogMap(
+                    Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .padding(16.dp)
+                )
             }
         }
     }

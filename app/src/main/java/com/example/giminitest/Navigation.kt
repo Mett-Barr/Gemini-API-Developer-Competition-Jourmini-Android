@@ -23,6 +23,7 @@ fun Navigation(modifier: Modifier = Modifier) {
     AnimatedContent(
         route,
         label = "",
+        modifier = modifier,
         transitionSpec = { (fadeIn().togetherWith(fadeOut())) }) {
         when (it) {
             Route.SEARCH -> SearchPage(
