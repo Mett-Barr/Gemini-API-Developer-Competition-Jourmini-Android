@@ -2,7 +2,10 @@ package com.example.giminitest.ui.page.main
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,10 +23,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -45,11 +50,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.giminitest.Route
-import com.example.giminitest.data.json.chatContinue
+import com.example.giminitest.data.json.LocationInfoBasic
+import com.example.giminitest.data.json.done
+import com.example.giminitest.data.json.morePlace
 import com.example.giminitest.data.json.situation.s1.tmp.S1enItem
+import com.example.giminitest.data.json.userInput
 import com.example.giminitest.ui.component.Waiting
 import com.example.giminitest.ui.component.YoutubeCard
 import com.example.giminitest.ui.theme.DefaultBlue
+import com.mikepenz.markdown.compose.components.CurrentComponentsBridge.text
 import com.mikepenz.markdown.m3.Markdown
 import kotlinx.coroutines.launch
 
@@ -78,12 +87,16 @@ fun TripPage(
         mutableStateListOf<S1enItem>().apply { addAll(tripState.s1) }
     }
 
+    val currSelected = remember {
+        mutableStateListOf<LocationInfoBasic>().apply { }
+    }
+
     Column(
         modifier.padding(8.dp),
     ) {
         LazyColumn(
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(list) {
@@ -99,7 +112,6 @@ fun TripPage(
                 it.planOptions?.let {
                     ElevatedCard {
                         Column(Modifier.padding(8.dp)) {
-                            Text("planOptions", fontSize = 36.sp)
                             Markdown(it)
                         }
                     }
@@ -157,25 +169,31 @@ fun TripPage(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             items(it) {
+                                var isSelected by remember { mutableStateOf(false) }
+
+                                val borderColor by animateColorAsState(
+                                    targetValue =
+                                    if (isSelected) DefaultBlue else Color.Transparent,
+                                    label = "isSelected"
+                                )
                                 Box(
                                     Modifier
                                         .size(170.dp)
                                         .clip(RoundedCornerShape(28.dp))
+                                        .border(4.dp, borderColor, RoundedCornerShape(28.dp))
                                         .clickable {
-//                                        val uri = Uri.parse("https://www.google.com/maps/search/?api=1&query=${it?.placeName}&query_place_id=${it?.placeId}\n")
-                                            val uri =
-                                                Uri.parse("https://www.google.com/maps/search/?api=1&query=${it?.placeCoordinates?.latitude},${it?.placeCoordinates?.longitude}")
-//                                        val uri = Uri.parse("https://www.google.com/maps/search/?api=1&query=${it?.placeCoordinates?.latitude},${it?.placeCoordinates?.longitude},&query_place_id=${it?.placeId}\n")
-//                                        val uri = Uri.parse("https://www.google.com/maps/place/?q=place_id:${it?.placeId ?: return@clickable}")
-                                            val mapIntent = Intent(Intent.ACTION_VIEW, uri)
-                                            mapIntent.setPackage("com.google.android.apps.maps")
-                                            if (mapIntent.resolveActivity(context.packageManager) != null) {
-                                                context.startActivity(mapIntent)
+                                            if (isSelected) {
+                                                isSelected = false
+                                                val i =
+                                                    currSelected.find { locationInfoBasic -> locationInfoBasic.placeId == it?.placeId }
+                                                currSelected.remove(i)
                                             } else {
-                                                // Handle the case where Google Maps app is not installed
-                                                // You can show a message to the user or open the URL in a web browser
-                                                val webIntent = Intent(Intent.ACTION_VIEW, uri)
-                                                context.startActivity(webIntent)
+                                                isSelected = true
+                                                val i = LocationInfoBasic(
+                                                    it?.placeId ?: return@clickable,
+                                                    it.placeName ?: return@clickable
+                                                )
+                                                currSelected.add(i)
                                             }
                                         }
                                 ) {
@@ -197,51 +215,87 @@ fun TripPage(
                             }
                         }
                     }
-
-                    Spacer(Modifier.size(8.dp))
-                    ElevatedCard(
-                        colors = CardDefaults.elevatedCardColors()
-                            .copy(containerColor = DefaultBlue)
-                    ) {
-                        Text("Complete Planning", Modifier.padding(12.dp), fontSize = 28.sp)
-                    }
                 }
 
                 ElevatedCard {
                     it.itinerary?.let {
-//                    Text("itinerary", fontSize = 36.sp)
                         Markdown(it)
                     }
-//                it.lnode?.let {
-//                    Text("lnode", fontSize = 36.sp)
-//                    Markdown(it)
-//                }
                     it.messages?.let {
-//                    Text("messages", fontSize = 36.sp)
                         it.forEach {
                             it?.content?.let { Markdown(it) }
                         }
                     }
                 }
-
-
-                //not sure
-//                it.placeName?.let { Text(it) }
-//                it.userMessage?.let { Text(it) }
-//
-//                it.placeId?.let { Text(it) }
             }
         }
 
 
+        val scope = rememberCoroutineScope()
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ExtendedFloatingActionButton(
+                onClick = {
+                    scope.launch {
+                        isWaiting = true
+                        val r = done(tripState.id)
+                        list.add(r)
+                        isWaiting = false
+                    }
+                },
+                Modifier
+                    .align(Alignment.CenterVertically)
+                    .weight(1f)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+//                    Icon(
+//                        imageVector = Icons.Rounded.Map,
+//                        contentDescription = null,
+//                        Modifier.size(48.dp)
+//                    )
+//                    Spacer(modifier = Modifier.size(16.dp))
+                    Text("Save to Itinerary", fontSize = 16.sp)
+                }
+            }
+
+            ExtendedFloatingActionButton(
+                onClick = {
+                    scope.launch {
+                        isWaiting = true
+                        val r = morePlace(tripState.id, currSelected.toList())
+                        Log.d("!!! id", "TripPage: tripState.id = ${tripState.id}")
+                        list.add(r)
+                        currSelected.clear()
+                        isWaiting = false
+                    }
+                },
+                Modifier
+                    .align(Alignment.CenterVertically)
+                    .weight(1f)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+//                    Icon(
+//                        imageVector = Icons.Rounded.Map,
+//                        contentDescription = null,
+//                        Modifier.size(48.dp)
+//                    )
+//                    Spacer(modifier = Modifier.size(16.dp))
+                    Text("Complete Planning", fontSize = 16.sp)
+                }
+            }
+        }
+
+
+        var text by remember { mutableStateOf("") }
         Card(shape = RoundedCornerShape(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(8.dp)) {
                 Icon(
                     imageVector = Icons.Rounded.Search,
                     contentDescription = "Search"
                 )
-                var text by remember { mutableStateOf("") }
-                val scope = rememberCoroutineScope()
                 TextField(
                     value = text, onValueChange = { text = it }, Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions.Default.copy(
@@ -249,10 +303,9 @@ fun TripPage(
                     ),
                     keyboardActions = KeyboardActions(
                         onSearch = {
-                            tripState.id
                             scope.launch {
                                 isWaiting = true
-                                val r = chatContinue(tripState.id, text)
+                                val r = userInput(tripState.id, text)
                                 list.add(r)
                                 isWaiting = false
                             }

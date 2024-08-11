@@ -1,8 +1,6 @@
 package com.example.giminitest.data.json
 
 import android.util.Log
-import com.example.giminitest.Route
-import com.example.giminitest.data.json.situation.s1.S1Request
 import com.example.giminitest.data.json.situation.s1.tmp.S1enItem
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -20,7 +18,7 @@ import kotlin.random.Random
 
 suspend fun chatContinue(threadId: String, userInteraction: String): S1enItem {
     val id = Random.nextInt().toString()
-    val r = ChatContinueResuest(
+    val r = ChatContinueRequest(
         threadId = threadId, userInteraction = userInteraction
     )
 
@@ -54,11 +52,17 @@ suspend fun chatContinue(threadId: String, userInteraction: String): S1enItem {
 }
 
 @Serializable
-data class ChatContinueResuest(
+data class ChatContinueRequest(
     @SerialName("location_basic_info")
-    val locationBasicInfo: List<String> = emptyList(),
+    val locationBasicInfo: List<LocationInfoBasic> = emptyList(),
     @SerialName("thread_id")
     val threadId: String? = null,
     @SerialName("user_interaction")
     val userInteraction: String? = null
+)
+
+@Serializable
+data class LocationInfoBasic(
+    val placeId: String,
+    val placeName: String
 )

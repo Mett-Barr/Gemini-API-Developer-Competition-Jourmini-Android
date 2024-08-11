@@ -63,6 +63,7 @@ import com.example.giminitest.data.json.situation.s1.tmp.S1en
 import com.example.giminitest.data.json.situation.s1.tmp.S1enItem
 import com.example.giminitest.ui.component.Waiting
 import com.example.giminitest.ui.theme.DefaultBlue
+import com.mikepenz.markdown.compose.components.CurrentComponentsBridge.text
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -100,6 +101,7 @@ fun SearchPage(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var text by remember { mutableStateOf("") }
     var showBottomSheet by remember { mutableStateOf(false) }
     var isWaiting by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -116,7 +118,45 @@ fun SearchPage(
         mutableStateListOf<Int>()
     }
 
-    var text by remember { mutableStateOf("") }
+    fun searchByText() {
+        scope.launch {
+            isWaiting = true
+            val id = Random.nextInt().toString()
+            val r = S1Request(
+                thread_id = id,
+                user_interaction = text
+            )
+
+            Log.d("!!! id", "searchByText: id = $id")
+
+            val client = HttpClient {
+                install(ContentNegotiation) {
+                    json(Json { ignoreUnknownKeys = true })  // 安裝JSON支持
+                }
+            }
+
+            // API的URL
+            val url = "https://langraphagent-production.up.railway.app/api/v1/llm/chat/init"
+
+            try {
+                // 發送POST請求
+                val response: HttpResponse = client.post(url) {
+                    contentType(ContentType.Application.Json)
+                    setBody(r)
+                }
+                val responseBody: S1enItem = response.body()
+
+                Log.d("!!!", "SearchPage: responseBody\n$responseBody")
+
+                navigateToTrip(Route.Trip(id, listOf(responseBody)))
+            } catch (e: Exception) {
+                Log.d("!!!", "Error occurred: ${e.message}")
+            } finally {
+                client.close()  // 關閉HttpClient
+                isWaiting = false
+            }
+        }
+    }
     Column(
         modifier.padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -146,7 +186,7 @@ fun SearchPage(
                     ),
                     keyboardActions = KeyboardActions(
                         onSearch = {
-//                            navigate()
+                            searchByText()
                         }
                     ),
                 )
@@ -156,17 +196,17 @@ fun SearchPage(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = fillMaxWidth
         ) {
-            FilledTonalButton(onClick = { showBottomSheet = true }) {
+            FilledTonalButton(onClick = ::searchByText) {
                 Row {
                     Icon(imageVector = Icons.Rounded.Search, contentDescription = null)
                 }
-                Text(text = "Focus")
+                Text(text = "Search")
             }
             FilledTonalButton(onClick = { showBottomSheet = true }) {
                 Row {
                     Icon(imageVector = Icons.Rounded.AttachFile, contentDescription = null)
                 }
-                Text(text = "Attach")
+                Text(text = "Explore")
             }
         }
         Spacer(
@@ -239,7 +279,6 @@ fun SearchPage(
             }
 
             ExtendedFloatingActionButton(onClick = {
-//                navigateToPlan(Route.Plan(Route.Plan.PlanState.PlanS1(S1en.getList())))
                 scope.launch {
                     sheetState.hide()
                     isWaiting = true
@@ -248,6 +287,7 @@ fun SearchPage(
                         locations = selectedList.map { list[it].placeName ?: "" },
                         thread_id = id
                     )
+                    Log.d("!!! id", "Plan My Trip: id = $id")
 
 
                     val client = HttpClient {
