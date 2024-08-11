@@ -95,6 +95,12 @@ dependencies {
 
     // Coil
     implementation(libs.coil.compose)
+
+
+    // MD
+//    implementation("com.mikepenz:markdown-compose:3.0.0")
+    implementation("com.mikepenz:multiplatform-markdown-renderer-m3:0.25.0")
+
 }
 
 

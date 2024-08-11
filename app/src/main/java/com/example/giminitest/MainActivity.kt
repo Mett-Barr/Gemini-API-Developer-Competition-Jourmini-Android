@@ -1,7 +1,6 @@
 package com.example.giminitest
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,15 +12,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.giminitest.BuildConfig.MAPS_API_KEY
-import com.example.giminitest.data.json.ApiJson.Companion.fakeJsonObject
-import com.example.giminitest.map.openGoogleMapsRoute
-import com.example.giminitest.ui.page.GeminiTestPage
-import com.example.giminitest.ui.page.main.PlanPage
+import com.example.giminitest.data.json.situation.s0.S0
+import com.example.giminitest.data.json.situation.s1.S1
+import com.example.giminitest.data.json.situation.s1.tmp.S1en
+import com.example.giminitest.data.json.situation.s2.tmp.S2
+import com.example.giminitest.data.json.situation.s3.tmp.S3Test
 import com.example.giminitest.ui.theme.GiminiTestTheme
 import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.api.net.FetchPhotoRequest
-import com.google.android.libraries.places.api.net.FetchPlaceRequest
 
 
 class MainActivity : ComponentActivity() {
@@ -30,6 +27,23 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
+
+        // done
+//        S0.test()
+//        S1en.test2()
+
+//        S2.test()
+//        S3Test.test()
+
+//        openGoogleMapsRoute(this)
+
+//        runBlocking {
+//            withContext(Dispatchers.IO) {
+//                fetchHybridApiData()
+//            }
+//        }
+
+//        S3_4test()
 
         setContent {
             GiminiTestTheme {

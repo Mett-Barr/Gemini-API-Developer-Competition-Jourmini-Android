@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,9 +32,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.giminitest.Route
 import com.example.giminitest.data.json.ApiJson
+import com.example.giminitest.data.json.yt.ResultX
+import com.example.giminitest.data.json.yt.YoutubeApi
 import com.example.giminitest.ui.component.DialogMap
 import com.example.giminitest.ui.component.YoutubeThumb
+import com.example.giminitest.ui.theme.DefaultBlue
 
 @Preview(
     widthDp = 730,
@@ -49,9 +54,11 @@ import com.example.giminitest.ui.component.YoutubeThumb
 )
 @Composable
 fun PlanPage(
+    planState: Route.Plan.PlanState = Route.Plan.fake,
     navigate: () -> Unit = {},
     modifier: Modifier = Modifier,
-    apiJson: ApiJson = ApiJson.fakeJsonObject
+    apiJson: ApiJson = ApiJson.fakeJsonObject,
+    youtubeApiJsonObject: YoutubeApi = YoutubeApi.fakeJsonObject
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -106,19 +113,21 @@ fun PlanPage(
                 }
                 item {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(5) {
+                        val list: List<ResultX> = youtubeApiJsonObject.results.flatMap { it.results }
+                        items(list) {
                             Column(Modifier.clip(RoundedCornerShape(16.dp))) {
                                 YoutubeThumb(
-                                    videoId = "f4cKo1jFZG0",
+                                    videoId = it.videoId,
                                     Modifier
                                         .width(200.dp)
                                         .aspectRatio(128f / 72f)
                                 )
                                 Text(
-                                    text = "Best Night Market", Modifier
-                                        .background(Color(0xff007aff))
+                                    text = it.videoTitle, Modifier
+                                        .background(DefaultBlue)
                                         .width(200.dp)
                                         .padding(8.dp)
+                                        .height(50.dp),
                                 )
                             }
                         }

@@ -1,35 +1,44 @@
 package com.example.giminitest.ui.page.main
 
 import android.content.res.Configuration
-import android.graphics.Bitmap
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
+import android.util.Log
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AttachFile
+import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBar
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,17 +47,43 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.giminitest.uriToBitmap
-import kotlinx.coroutines.Dispatchers
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.giminitest.Route
+import com.example.giminitest.data.json.situation.s0.S0
+import com.example.giminitest.data.json.situation.s1.S1Request
+import com.example.giminitest.data.json.situation.s1.tmp.S1en
+import com.example.giminitest.data.json.situation.s1.tmp.S1enItem
+import com.example.giminitest.ui.component.Waiting
+import com.example.giminitest.ui.theme.DefaultBlue
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.client.utils.EmptyContent.contentType
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlin.random.Random
 
 @Preview(
+    widthDp = 730,
+    heightDp = 1112,
     showBackground = true,
-    showSystemUi = true,
+//    showSystemUi = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
@@ -59,34 +94,26 @@ fun Preview(modifier: Modifier = Modifier) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchPage(
-    navigate: () -> Unit = {},
+    navigateToPlan: (Route.Plan) -> Unit = {},
+    navigateToTrip: (Route.Trip) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val images = remember { mutableStateListOf<Bitmap>() }
+    var showBottomSheet by remember { mutableStateOf(false) }
+    var isWaiting by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val getImageLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) {
-        scope.launch(Dispatchers.Default) {
-            val bitmap = uriToBitmap(context, it ?: return@launch) ?: return@launch
-            images.add(bitmap)
-        }
+    val list = remember {
+        mutableStateListOf<S0>()
     }
 
-    fun getImage() {
-        getImageLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    LaunchedEffect(Unit) {
+        list.addAll(S0.getFakeList())
     }
 
-    val captureLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.TakePicturePreview()
-    ) {
-        images.add(it ?: return@rememberLauncherForActivityResult)
-    }
-
-    fun capture() {
-        captureLauncher.launch(null)
+    val selectedList = remember {
+        mutableStateListOf<Int>()
     }
 
     var text by remember { mutableStateOf("") }
@@ -119,41 +146,23 @@ fun SearchPage(
                     ),
                     keyboardActions = KeyboardActions(
                         onSearch = {
-                            navigate()
+//                            navigate()
                         }
                     ),
                 )
             }
         }
-//        SearchBar(
-//            modifier = fillMaxWidth,
-//            query = text,
-//            onQueryChange = { text = it },
-//            onSearch = { navigate() },
-//            active = false,
-//            onActiveChange = {},
-//            shape = RoundedCornerShape(8.dp),
-//            leadingIcon = {
-//                Icon(
-//                    imageVector = Icons.Rounded.Search,
-//                    contentDescription = "Search"
-//                )
-//            },
-//            windowInsets = WindowInsets(0.dp)
-//        ) {
-//            TextField(value = text, onValueChange = { text = it }, Modifier.fillMaxWidth())
-//        }
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = fillMaxWidth
         ) {
-            FilledTonalButton(onClick = { /*TODO*/ }) {
+            FilledTonalButton(onClick = { showBottomSheet = true }) {
                 Row {
                     Icon(imageVector = Icons.Rounded.Search, contentDescription = null)
                 }
                 Text(text = "Focus")
             }
-            FilledTonalButton(onClick = ::getImage) {
+            FilledTonalButton(onClick = { showBottomSheet = true }) {
                 Row {
                     Icon(imageVector = Icons.Rounded.AttachFile, contentDescription = null)
                 }
@@ -165,5 +174,124 @@ fun SearchPage(
                 .weight(1f)
                 .width(150.dp)
         )
+    }
+
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showBottomSheet = false
+            },
+            sheetState = sheetState,
+            modifier = modifier.fillMaxSize()
+        ) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(150.dp),
+                Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                itemsIndexed(list) { index, it ->
+                    var isSelected by remember {
+                        mutableStateOf(false)
+                    }
+                    LaunchedEffect(Unit) {
+                        if (selectedList.contains(index)) isSelected = true
+                    }
+
+                    val borderColor by animateColorAsState(
+                        targetValue =
+                        if (isSelected) DefaultBlue else Color.Transparent, label = "isSelected"
+                    )
+
+                    Column(
+                        Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .border(4.dp, borderColor, RoundedCornerShape(8.dp))
+                            .clickable {
+                                scope.launch {
+                                    if (isSelected) {
+                                        selectedList.remove(index)
+                                        isSelected = false
+                                    } else {
+                                        selectedList.add(index)
+                                        isSelected = true
+                                    }
+                                }
+                            }) {
+                        AsyncImage(
+                            model = it.photoUrl,
+                            contentDescription = it.placeName,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(1f),
+                            contentScale = ContentScale.Crop
+                        )
+                        Text(
+                            text = it.placeName ?: "",
+                            Modifier
+                                .padding(8.dp)
+                                .height(48.dp)
+                        )
+                    }
+                }
+            }
+
+            ExtendedFloatingActionButton(onClick = {
+//                navigateToPlan(Route.Plan(Route.Plan.PlanState.PlanS1(S1en.getList())))
+                scope.launch {
+                    sheetState.hide()
+                    isWaiting = true
+                    val id = Random.nextInt().toString()
+                    val r = S1Request(
+                        locations = selectedList.map { list[it].placeName ?: "" },
+                        thread_id = id
+                    )
+
+
+                    val client = HttpClient {
+                        install(ContentNegotiation) {
+                            json(Json { ignoreUnknownKeys = true })  // 安裝JSON支持
+                        }
+                    }
+
+                    // API的URL
+                    val url = "https://langraphagent-production.up.railway.app/api/v1/llm/chat/init"
+
+
+                    try {
+                        // 發送POST請求
+                        val response: HttpResponse = client.post(url) {
+                            contentType(ContentType.Application.Json)
+                            setBody(r)
+                        }
+                        val responseBody: S1enItem = response.body()
+
+                        Log.d("!!!", "SearchPage: responseBody\n$responseBody")
+
+                        navigateToTrip(Route.Trip(id, listOf(responseBody)))
+                    } catch (e: Exception) {
+                        Log.d("!!!", "Error occurred: ${e.message}")
+                    } finally {
+                        client.close()  // 關閉HttpClient
+                        isWaiting = false
+                    }
+                }
+            },
+                Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = Icons.Rounded.Map, contentDescription = null, Modifier.size(48.dp))
+                    Spacer(modifier = Modifier.size(16.dp))
+                    Text("Plan My Trip", fontSize = 24.sp)
+                }
+            }
+        }
+    }
+
+    if (isWaiting) {
+        Waiting()
     }
 }
