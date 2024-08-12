@@ -59,21 +59,16 @@ import coil.compose.AsyncImage
 import com.example.giminitest.Route
 import com.example.giminitest.data.json.situation.s0.S0
 import com.example.giminitest.data.json.situation.s1.S1Request
-import com.example.giminitest.data.json.situation.s1.tmp.S1en
 import com.example.giminitest.data.json.situation.s1.tmp.S1enItem
 import com.example.giminitest.ui.component.Waiting
 import com.example.giminitest.ui.theme.DefaultBlue
-import com.mikepenz.markdown.compose.components.CurrentComponentsBridge.text
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
-import io.ktor.client.utils.EmptyContent.contentType
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
@@ -95,7 +90,6 @@ fun Preview(modifier: Modifier = Modifier) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchPage(
-    navigateToPlan: (Route.Plan) -> Unit = {},
     navigateToTrip: (Route.Trip) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -169,7 +163,7 @@ fun SearchPage(
         )
         val fillMaxWidth = Modifier.fillMaxWidth()
         Text(
-            text = "Where knowledge begins",
+            text = "Plane Next Adventure",
             fillMaxWidth,
             style = MaterialTheme.typography.headlineSmall
         )
@@ -287,7 +281,7 @@ fun SearchPage(
                         locations = selectedList.map { list[it].placeName ?: "" },
                         thread_id = id
                     )
-                    Log.d("!!! id", "Plan My Trip: id = $id")
+                    Log.d("!!! id", "S1Request = $r")
 
 
                     val client = HttpClient {

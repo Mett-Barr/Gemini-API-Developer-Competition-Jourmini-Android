@@ -251,12 +251,6 @@ fun TripPage(
                     .weight(1f)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-//                    Icon(
-//                        imageVector = Icons.Rounded.Map,
-//                        contentDescription = null,
-//                        Modifier.size(48.dp)
-//                    )
-//                    Spacer(modifier = Modifier.size(16.dp))
                     Text("Save to Itinerary", fontSize = 16.sp)
                 }
             }
@@ -277,12 +271,6 @@ fun TripPage(
                     .weight(1f)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-//                    Icon(
-//                        imageVector = Icons.Rounded.Map,
-//                        contentDescription = null,
-//                        Modifier.size(48.dp)
-//                    )
-//                    Spacer(modifier = Modifier.size(16.dp))
                     Text("Complete Planning", fontSize = 16.sp)
                 }
             }
